@@ -1,0 +1,86 @@
+# Deployment Configuration
+# ------------------------
+# Settings for SageMaker endpoint deployment
+
+endpoint:
+  name_prefix: "mlops-model"
+  # Naming pattern: {name_prefix}-{environment}-{timestamp}
+  
+environments:
+  staging:
+    instance_type: "ml.m5.large"
+    instance_count: 1
+    enable_autoscaling: false
+    
+  production:
+    instance_type: "ml.m5.xlarge"
+    instance_count: 2
+    enable_autoscaling: true
+
+deployment_strategy:
+  # Blue-Green deployment configuration
+  type: "blue_green"  # blue_green, canary, rolling
+  
+  # Traffic shifting configuration
+  traffic_routing:
+    type: "linear"  # linear, canary, all_at_once
+    # Linear: gradual traffic shift
+    linear_config:
+      wait_interval_seconds: 300  # 5 minutes between steps
+      step_percentage: 20  # 20% traffic shift per step
+    # Canary: small percentage first, then all
+    canary_config:
+      initial_percentage: 10
+      baking_period_seconds: 600  # 10 minutes
+  
+  # Health check configuration
+  health_check:
+    initial_health_check_wait_seconds: 120
+    termination_wait_seconds: 300
+  
+  # Rollback configuration
+  auto_rollback:
+    enabled: true
+    alarm_names:
+      - "HighLatencyAlarm"
+      - "HighErrorRateAlarm"
+      - "ModelQualityAlarm"
+
+model_registry:
+  # SageMaker Model Registry configuration
+  model_package_group: "mlops-models"
+  approval_status: "PendingManualApproval"  # or Approved
+  description_template: "Model trained on {date} with AUC={auc:.4f}"
+
+inference:
+  # Inference configuration
+  serializer: "json"
+  deserializer: "json"
+  content_type: "application/json"
+  accept_type: "application/json"
+  
+  # Batch transform (optional)
+  batch_transform:
+    instance_type: "ml.m5.xlarge"
+    instance_count: 1
+    max_payload_mb: 6
+    strategy: "SingleRecord"  # SingleRecord, MultiRecord
+
+data_capture:
+  # Data capture for monitoring
+  enabled: true
+  sampling_percentage: 10
+  capture_modes:
+    - "Input"
+    - "Output"
+  destination_path: "monitoring/data-capture/"
+
+shadow_deployment:
+  # Shadow/mirror deployment for A/B testing
+  enabled: false
+  shadow_endpoint_name: "mlops-model-shadow"
+  
+tags:
+  project: "mlops-template"
+  team: "data-science"
+  managed_by: "gitlab-ci"

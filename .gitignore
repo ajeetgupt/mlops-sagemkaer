@@ -1,0 +1,98 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Documentation artifacts (internal planning docs)
+IMPLEMENTATION_PLAN.md
+WALKTHROUGH.md
+
+# AWS
+.aws/
+*.pem
+
+# SageMaker
+.sagemaker/
+sagemaker_output/
+
+# Data files (add your data directories)
+data/raw/
+data/processed/
+*.csv
+*.parquet
+*.pkl
+*.joblib
+
+# Model artifacts
+models/
+*.tar.gz
+*.h5
+*.pt
+*.pth
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
+
+# Temporary files
+tmp/
+temp/
+*.tmp

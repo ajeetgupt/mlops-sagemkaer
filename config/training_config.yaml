@@ -1,0 +1,70 @@
+# Training Configuration
+# ----------------------
+# Hyperparameters and settings for SageMaker training jobs
+
+model:
+  name: "xgboost-model"
+  framework: "xgboost"
+  version: "1.7-1"
+
+hyperparameters:
+  # XGBoost parameters
+  max_depth: 6
+  eta: 0.3
+  gamma: 0
+  min_child_weight: 1
+  subsample: 0.8
+  colsample_bytree: 0.8
+  objective: "binary:logistic"
+  num_round: 100
+  eval_metric: "auc"
+  early_stopping_rounds: 10
+
+training:
+  # Instance configuration
+  instance_type: "ml.m5.xlarge"
+  instance_count: 1
+  volume_size_gb: 50
+  max_runtime_seconds: 86400  # 24 hours
+  
+  # Input/Output paths (relative to S3 bucket)
+  input_path: "data/processed/"
+  output_path: "models/"
+  
+  # Data configuration
+  train_split: 0.8
+  validation_split: 0.1
+  test_split: 0.1
+  
+  # Feature configuration
+  target_column: "target"
+  feature_columns: []  # Empty means all columns except target
+  categorical_columns: []
+  
+preprocessing:
+  # Data preprocessing settings
+  handle_missing: "median"  # median, mean, drop, zero
+  handle_outliers: "clip"  # clip, remove, none
+  outlier_std_threshold: 3
+  normalize: true
+  normalization_method: "standard"  # standard, minmax, robust
+
+validation:
+  # Model validation thresholds
+  min_auc: 0.75
+  min_accuracy: 0.80
+  min_precision: 0.70
+  min_recall: 0.70
+  min_f1: 0.70
+  max_log_loss: 0.5
+
+experiment:
+  # MLflow/SageMaker Experiments configuration
+  experiment_name: "mlops-xgboost"
+  enable_tracking: true
+  log_artifacts: true
+  
+tags:
+  project: "mlops-template"
+  team: "data-science"
+  environment: "development"

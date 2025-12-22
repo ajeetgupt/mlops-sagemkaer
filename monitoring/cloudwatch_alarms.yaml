@@ -1,0 +1,127 @@
+# CloudWatch Alarms Configuration
+# --------------------------------
+
+alarms:
+  # Endpoint latency alarm
+  - name: "MLOps-HighLatencyAlarm"
+    description: "Alert when endpoint latency is high"
+    metric:
+      namespace: "AWS/SageMaker"
+      name: "ModelLatency"
+      statistic: "p95"
+      period: 60
+    threshold: 500  # milliseconds
+    comparison: "GreaterThanThreshold"
+    evaluation_periods: 3
+    actions:
+      - type: "sns"
+        topic: "${SNS_TOPIC_ARN}"
+      - type: "autoscaling"
+        action: "scale_out"
+
+  # Error rate alarm
+  - name: "MLOps-HighErrorRateAlarm"
+    description: "Alert when error rate exceeds threshold"
+    metric:
+      namespace: "AWS/SageMaker"
+      name: "Invocation5XXErrors"
+      statistic: "Sum"
+      period: 60
+    threshold: 10
+    comparison: "GreaterThanThreshold"
+    evaluation_periods: 2
+    actions:
+      - type: "sns"
+        topic: "${SNS_TOPIC_ARN}"
+
+  # Invocations alarm for capacity planning
+  - name: "MLOps-HighInvocationsAlarm"
+    description: "Alert for high invocation volume"
+    metric:
+      namespace: "AWS/SageMaker"
+      name: "InvocationsPerInstance"
+      statistic: "Average"
+      period: 60
+    threshold: 1500
+    comparison: "GreaterThanThreshold"
+    evaluation_periods: 3
+    actions:
+      - type: "autoscaling"
+        action: "scale_out"
+
+  # CPU utilization alarm
+  - name: "MLOps-HighCPUAlarm"
+    description: "Alert when CPU utilization is high"
+    metric:
+      namespace: "/aws/sagemaker/Endpoints"
+      name: "CPUUtilization"
+      statistic: "Average"
+      period: 60
+    threshold: 80
+    comparison: "GreaterThanThreshold"
+    evaluation_periods: 3
+    actions:
+      - type: "sns"
+        topic: "${SNS_TOPIC_ARN}"
+
+  # Memory utilization alarm
+  - name: "MLOps-HighMemoryAlarm"
+    description: "Alert when memory utilization is high"
+    metric:
+      namespace: "/aws/sagemaker/Endpoints"
+      name: "MemoryUtilization"
+      statistic: "Average"
+      period: 60
+    threshold: 85
+    comparison: "GreaterThanThreshold"
+    evaluation_periods: 3
+    actions:
+      - type: "sns"
+        topic: "${SNS_TOPIC_ARN}"
+
+  # Data drift alarm
+  - name: "MLOps-DataDriftAlarm"
+    description: "Alert when data drift is detected"
+    metric:
+      namespace: "MLOps/Monitoring"
+      name: "DataDriftScore"
+      statistic: "Average"
+      period: 3600
+    threshold: 0.3
+    comparison: "GreaterThanThreshold"
+    evaluation_periods: 1
+    actions:
+      - type: "sns"
+        topic: "${SNS_TOPIC_ARN}"
+      - type: "pipeline"
+        action: "trigger_retrain"
+
+  # Model quality alarm
+  - name: "MLOps-ModelQualityAlarm"
+    description: "Alert when model performance degrades"
+    metric:
+      namespace: "MLOps/Monitoring"
+      name: "ModelAccuracy"
+      statistic: "Average"
+      period: 3600
+    threshold: 0.75
+    comparison: "LessThanThreshold"
+    evaluation_periods: 3
+    actions:
+      - type: "sns"
+        topic: "${SNS_TOPIC_ARN}"
+
+# Composite alarms
+composite_alarms:
+  - name: "MLOps-EndpointHealthComposite"
+    description: "Combined health check alarm"
+    rule: "ALARM(MLOps-HighLatencyAlarm) OR ALARM(MLOps-HighErrorRateAlarm)"
+    actions:
+      - type: "sns"
+        topic: "${SNS_TOPIC_ARN}"
+
+# Tags for all alarms
+default_tags:
+  Project: "mlops-template"
+  Environment: "${ENVIRONMENT}"
+  ManagedBy: "terraform"

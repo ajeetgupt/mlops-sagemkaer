@@ -1,0 +1,169 @@
+{
+    "widgets": [
+        {
+            "type": "text",
+            "x": 0,
+            "y": 0,
+            "width": 24,
+            "height": 1,
+            "properties": {
+                "markdown": "# MLOps Endpoint Monitoring Dashboard"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 1,
+            "width": 8,
+            "height": 6,
+            "properties": {
+                "title": "Invocation Count",
+                "metrics": [
+                    [
+                        "AWS/SageMaker",
+                        "Invocations",
+                        "EndpointName",
+                        "${ENDPOINT_NAME}",
+                        "VariantName",
+                        "AllTraffic"
+                    ]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS_REGION}"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 8,
+            "y": 1,
+            "width": 8,
+            "height": 6,
+            "properties": {
+                "title": "Model Latency (p50, p95, p99)",
+                "metrics": [
+                    [
+                        "AWS/SageMaker",
+                        "ModelLatency",
+                        "EndpointName",
+                        "${ENDPOINT_NAME}",
+                        {
+                            "stat": "p50",
+                            "label": "p50"
+                        }
+                    ],
+                    [
+                        "...",
+                        {
+                            "stat": "p95",
+                            "label": "p95"
+                        }
+                    ],
+                    [
+                        "...",
+                        {
+                            "stat": "p99",
+                            "label": "p99"
+                        }
+                    ]
+                ],
+                "period": 60,
+                "region": "${AWS_REGION}"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 16,
+            "y": 1,
+            "width": 8,
+            "height": 6,
+            "properties": {
+                "title": "Error Rates",
+                "metrics": [
+                    [
+                        "AWS/SageMaker",
+                        "Invocation4XXErrors",
+                        "EndpointName",
+                        "${ENDPOINT_NAME}",
+                        {
+                            "color": "#ff7f0e"
+                        }
+                    ],
+                    [
+                        ".",
+                        "Invocation5XXErrors",
+                        ".",
+                        ".",
+                        {
+                            "color": "#d62728"
+                        }
+                    ]
+                ],
+                "period": 60,
+                "stat": "Sum",
+                "region": "${AWS_REGION}"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 7,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "title": "Instance Metrics",
+                "metrics": [
+                    [
+                        "/aws/sagemaker/Endpoints",
+                        "CPUUtilization",
+                        "EndpointName",
+                        "${ENDPOINT_NAME}",
+                        {
+                            "label": "CPU %"
+                        }
+                    ],
+                    [
+                        ".",
+                        "MemoryUtilization",
+                        ".",
+                        ".",
+                        {
+                            "label": "Memory %"
+                        }
+                    ]
+                ],
+                "period": 60,
+                "stat": "Average",
+                "region": "${AWS_REGION}"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 7,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "title": "Data Drift Score",
+                "metrics": [
+                    [
+                        "MLOps/Monitoring",
+                        "DataDriftScore"
+                    ]
+                ],
+                "period": 3600,
+                "stat": "Average",
+                "region": "${AWS_REGION}",
+                "annotations": {
+                    "horizontal": [
+                        {
+                            "value": 0.3,
+                            "label": "Drift Threshold",
+                            "color": "#d62728"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,132 @@
+# Autoscaling Configuration
+# -------------------------
+# SageMaker endpoint autoscaling policies
+
+autoscaling:
+  enabled: true
+  
+  # Instance capacity limits
+  capacity:
+    min_instances: 1
+    max_instances: 10
+    desired_instances: 2
+
+  # Target tracking scaling policy
+  # Scales based on invocations per instance
+  target_tracking:
+    enabled: true
+    policy_name: "InvocationsTargetTracking"
+    metric_name: "SageMakerVariantInvocationsPerInstance"
+    target_value: 1000  # Target invocations per instance per minute
+    scale_in_cooldown: 300  # 5 minutes
+    scale_out_cooldown: 60  # 1 minute
+    disable_scale_in: false
+
+  # Step scaling policy
+  # Scales based on CPU/Memory utilization
+  step_scaling:
+    enabled: true
+    policies:
+      # Scale out policy for high CPU
+      - policy_name: "HighCPUScaleOut"
+        metric_name: "CPUUtilization"
+        alarm_threshold: 70  # percentage
+        comparison_operator: "GreaterThanThreshold"
+        evaluation_periods: 2
+        period_seconds: 60
+        adjustment_type: "ChangeInCapacity"
+        scaling_adjustment: 2
+        cooldown: 120
+
+      # Scale in policy for low CPU  
+      - policy_name: "LowCPUScaleIn"
+        metric_name: "CPUUtilization"
+        alarm_threshold: 30  # percentage
+        comparison_operator: "LessThanThreshold"
+        evaluation_periods: 5
+        period_seconds: 60
+        adjustment_type: "ChangeInCapacity"
+        scaling_adjustment: -1
+        cooldown: 300
+
+      # Scale out for high memory
+      - policy_name: "HighMemoryScaleOut"
+        metric_name: "MemoryUtilization"
+        alarm_threshold: 80  # percentage
+        comparison_operator: "GreaterThanThreshold"
+        evaluation_periods: 2
+        period_seconds: 60
+        adjustment_type: "ChangeInCapacity"
+        scaling_adjustment: 1
+        cooldown: 120
+
+  # Scheduled scaling
+  # Time-based scaling for predictable traffic patterns
+  scheduled_scaling:
+    enabled: false
+    schedules:
+      # Scale up for business hours (9 AM - 6 PM)
+      - name: "BusinessHoursScaleUp"
+        schedule: "cron(0 9 ? * MON-FRI *)"  # 9 AM UTC, Mon-Fri
+        min_capacity: 3
+        max_capacity: 10
+        
+      # Scale down after business hours
+      - name: "AfterHoursScaleDown"
+        schedule: "cron(0 18 ? * MON-FRI *)"  # 6 PM UTC, Mon-Fri
+        min_capacity: 1
+        max_capacity: 5
+        
+      # Weekend minimal capacity
+      - name: "WeekendMinimal"
+        schedule: "cron(0 0 ? * SAT *)"  # Saturday midnight
+        min_capacity: 1
+        max_capacity: 2
+
+  # Predictive scaling (uses ML to forecast capacity needs)
+  predictive_scaling:
+    enabled: false
+    mode: "ForecastAndScale"  # ForecastOnly, ForecastAndScale
+    scheduling_buffer_time: 300  # 5 minutes pre-scaling
+    max_capacity_breach_behavior: "IncreaseMaxCapacity"
+
+  # Warm pool for faster scaling
+  warm_pool:
+    enabled: false
+    pool_size: 2
+    max_warmup_time: 300
+
+# CloudWatch alarms for autoscaling triggers
+alarms:
+  # High latency alarm
+  - name: "HighLatencyAlarm"
+    metric_name: "ModelLatency"
+    namespace: "AWS/SageMaker"
+    statistic: "p95"
+    threshold: 500  # milliseconds
+    comparison_operator: "GreaterThanThreshold"
+    evaluation_periods: 3
+    period_seconds: 60
+    alarm_actions: ["sns:notify", "autoscaling:scale_out"]
+    
+  # High error rate alarm
+  - name: "HighErrorRateAlarm"
+    metric_name: "Invocation5XXErrors"
+    namespace: "AWS/SageMaker"
+    statistic: "Sum"
+    threshold: 10
+    comparison_operator: "GreaterThanThreshold"
+    evaluation_periods: 2
+    period_seconds: 60
+    alarm_actions: ["sns:notify"]
+
+  # Invocation count for capacity planning  
+  - name: "HighInvocationAlarm"
+    metric_name: "InvocationsPerInstance"
+    namespace: "AWS/SageMaker"
+    statistic: "Average"
+    threshold: 1500
+    comparison_operator: "GreaterThanThreshold"
+    evaluation_periods: 2
+    period_seconds: 60
+    alarm_actions: ["autoscaling:scale_out"]
