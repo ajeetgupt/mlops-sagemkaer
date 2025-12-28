@@ -1,0 +1,155 @@
+# Security Configuration
+# ----------------------
+# Security settings and compliance requirements
+
+authentication:
+  # AWS Authentication
+  method: "oidc"  # oidc, access_keys (avoid), iam_role
+  
+  oidc:
+    enabled: true
+    provider_url: "https://gitlab.example.com"
+    audience: "sts.amazonaws.com"
+    # Role to assume via OIDC
+    role_arn: "${SAGEMAKER_EXECUTION_ROLE}"
+
+secrets_management:
+  # AWS Secrets Manager configuration
+  secrets_manager:
+    enabled: true
+    prefix: "mlops/"
+    rotation_days: 90
+  
+  # Secrets to store
+  secrets:
+    - name: "mlops/api-keys"
+      description: "External API keys"
+    - name: "mlops/database-credentials"
+      description: "Database connection strings"
+
+encryption:
+  # Encryption at rest
+  at_rest:
+    s3:
+      enabled: true
+      kms_key_alias: "alias/mlops-sagemaker"
+    ebs:
+      enabled: true
+      kms_key_alias: "alias/mlops-sagemaker"
+    sagemaker:
+      enabled: true
+      kms_key_alias: "alias/mlops-sagemaker"
+  
+  # Encryption in transit
+  in_transit:
+    enforce_https: true
+    minimum_tls_version: "1.2"
+
+network_security:
+  # VPC configuration
+  vpc:
+    enabled: true
+    internet_access: false  # No direct internet access
+    
+  # VPC endpoints for AWS services
+  endpoints:
+    - sagemaker.api
+    - sagemaker.runtime
+    - s3
+    - ecr.api
+    - ecr.dkr
+    - logs
+    - kms
+  
+  # Security groups
+  security_groups:
+    ingress:
+      - port: 443
+        source: "vpc"
+        description: "HTTPS from VPC"
+    egress:
+      - port: 443
+        destination: "vpc_endpoints"
+        description: "HTTPS to AWS services"
+
+access_control:
+  # IAM policies
+  principle_of_least_privilege: true
+  
+  roles:
+    sagemaker_execution:
+      permissions:
+        - "s3:GetObject on data-bucket"
+        - "s3:PutObject on model-bucket"
+        - "logs:CreateLogStream"
+        - "kms:Encrypt/Decrypt"
+      deny:
+        - "s3:DeleteBucket"
+        - "iam:*"
+    
+    ci_cd:
+      permissions:
+        - "sagemaker:CreateEndpoint"
+        - "sagemaker:UpdateEndpoint"
+        - "sagemaker:CreateModel"
+      deny:
+        - "ec2:*"
+        - "iam:CreateRole"
+
+audit_logging:
+  # CloudTrail configuration
+  cloudtrail:
+    enabled: true
+    log_group: "/aws/cloudtrail/mlops"
+    retention_days: 365
+    
+  # Events to capture
+  events:
+    - "sagemaker:CreateEndpoint"
+    - "sagemaker:DeleteEndpoint"
+    - "sagemaker:UpdateEndpoint"
+    - "sagemaker:CreateModel"
+    - "sagemaker:StartPipelineExecution"
+    - "s3:PutObject"
+    - "s3:DeleteObject"
+
+vulnerability_scanning:
+  # Container scanning
+  container_scanning:
+    enabled: true
+    tool: "trivy"
+    severity_threshold: "HIGH"
+    fail_build: true
+  
+  # Dependency scanning
+  dependency_scanning:
+    enabled: true
+    tool: "safety"
+    fail_build: true
+  
+  # Infrastructure scanning
+  infrastructure_scanning:
+    enabled: true
+    tools:
+      - "checkov"
+      - "tfsec"
+
+compliance:
+  # Compliance frameworks
+  frameworks:
+    - "SOC2"
+    - "GDPR"
+    - "HIPAA"
+  
+  # Data handling
+  data_classification:
+    public: false
+    internal: true
+    confidential: true
+    restricted: false
+  
+  # Data retention
+  retention:
+    training_data_days: 365
+    model_artifacts_days: 730
+    inference_logs_days: 90

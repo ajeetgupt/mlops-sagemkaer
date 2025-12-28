@@ -1,0 +1,111 @@
+# Cost Optimization Configuration
+# --------------------------------
+# Settings for optimizing AWS costs
+
+cost_allocation:
+  # Tags for cost tracking
+  tags:
+    project: "mlops-sagemaker"
+    environment: "${ENVIRONMENT}"
+    team: "${TEAM}"
+    cost_center: "${COST_CENTER}"
+    owner: "${OWNER_EMAIL}"
+
+spot_instances:
+  # Training jobs
+  training:
+    enabled: true
+    max_wait_seconds: 3600
+    max_runtime_seconds: 86400
+    # Fallback to on-demand if spot unavailable
+    fallback_to_on_demand: true
+  
+  # Processing jobs
+  processing:
+    enabled: true
+    max_wait_seconds: 1800
+
+instance_right_sizing:
+  # Recommended instance types by workload
+  training:
+    small: "ml.m5.large"      # < 10GB data
+    medium: "ml.m5.xlarge"    # 10-50GB data
+    large: "ml.m5.4xlarge"    # > 50GB data
+    gpu: "ml.g4dn.xlarge"     # Deep learning
+  
+  inference:
+    development: "ml.t3.medium"
+    staging: "ml.m5.large"
+    production: "ml.m5.xlarge"
+
+scheduled_scaling:
+  # Scale down during off-hours
+  business_hours:
+    start: "09:00"
+    end: "18:00"
+    timezone: "UTC"
+    min_capacity: 2
+    max_capacity: 10
+  
+  off_hours:
+    min_capacity: 1
+    max_capacity: 2
+  
+  weekends:
+    min_capacity: 1
+    max_capacity: 1
+
+budget_alerts:
+  # AWS Budget configuration
+  monthly_budget: 5000  # USD
+  
+  thresholds:
+    - percentage: 50
+      notification: "warning"
+    - percentage: 80
+      notification: "alert"
+    - percentage: 100
+      notification: "critical"
+  
+  notification_emails:
+    - "team@example.com"
+    - "manager@example.com"
+
+cleanup_policies:
+  # Automatic resource cleanup
+  endpoints:
+    # Delete unused staging endpoints after 7 days
+    staging_ttl_days: 7
+    # Never auto-delete production
+    production_ttl_days: null
+  
+  models:
+    # Keep last N model versions
+    keep_versions: 5
+  
+  experiments:
+    # Archive experiments older than 90 days
+    archive_after_days: 90
+  
+  data:
+    # Move to Glacier after 90 days
+    glacier_transition_days: 90
+    # Delete after 365 days (if not needed)
+    expiration_days: null
+
+optimization_recommendations:
+  # Automated recommendations
+  enabled: true
+  
+  checks:
+    - type: "underutilized_endpoints"
+      threshold: "< 10 invocations/hour"
+      action: "notify"
+    
+    - type: "oversized_instances"
+      threshold: "< 30% CPU utilization"
+      action: "notify"
+    
+    - type: "idle_notebooks"
+      threshold: "> 2 hours idle"
+      action: "auto_stop"

@@ -91,6 +91,8 @@ logs/
 # Environment variables
 .env
 .env.local
+docs/
+presentation/
 
 # Temporary files
 tmp/

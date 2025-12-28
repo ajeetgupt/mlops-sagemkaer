@@ -1,0 +1,144 @@
+# Infrastructure CI/CD Pipeline
+# -----------------------------
+# Terraform plan/apply with security scanning
+
+stages:
+  - validate
+  - security-scan
+  - plan
+  - apply
+
+variables:
+  TF_ROOT: "infrastructure/terraform"
+  TF_STATE_BUCKET: "mlops-terraform-state-${AWS_ACCOUNT_ID}"
+  AWS_DEFAULT_REGION: ${AWS_REGION}
+
+default:
+  image: hashicorp/terraform:1.5
+  before_script:
+    - cd ${TF_ROOT}
+    - terraform init -backend-config="bucket=${TF_STATE_BUCKET}"
+
+# ======================================
+# STAGE: Validate
+# ======================================
+terraform-validate:
+  stage: validate
+  script:
+    - terraform validate
+    - terraform fmt -check -recursive
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH =~ /^(main|develop)$/
+
+# ======================================
+# STAGE: Security Scan
+# ======================================
+checkov-scan:
+  stage: security-scan
+  image: bridgecrew/checkov:latest
+  before_script: []
+  script:
+    - checkov -d ${TF_ROOT} --framework terraform --output cli --output junitxml --output-file-path . || true
+  artifacts:
+    reports:
+      junit: results_junitxml.xml
+    when: always
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH =~ /^(main|develop)$/
+
+tfsec-scan:
+  stage: security-scan
+  image: aquasec/tfsec:latest
+  before_script: []
+  script:
+    - tfsec ${TF_ROOT} --format junit --out tfsec-results.xml || true
+  artifacts:
+    reports:
+      junit: tfsec-results.xml
+    when: always
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH =~ /^(main|develop)$/
+
+# ======================================
+# STAGE: Plan
+# ======================================
+.plan_template: &plan_template
+  stage: plan
+  script:
+    - terraform workspace select ${ENVIRONMENT} || terraform workspace new ${ENVIRONMENT}
+    - terraform plan -var-file="environments/${ENVIRONMENT}/terraform.tfvars" -out=plan.tfplan
+  artifacts:
+    paths:
+      - ${TF_ROOT}/plan.tfplan
+    expire_in: 7 days
+
+plan-staging:
+  <<: *plan_template
+  variables:
+    ENVIRONMENT: staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "main"
+
+plan-production:
+  <<: *plan_template
+  variables:
+    ENVIRONMENT: production
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# ======================================
+# STAGE: Apply
+# ======================================
+.apply_template: &apply_template
+  stage: apply
+  script:
+    - terraform workspace select ${ENVIRONMENT}
+    - terraform apply -auto-approve plan.tfplan
+  when: manual
+
+apply-staging:
+  <<: *apply_template
+  variables:
+    ENVIRONMENT: staging
+  environment:
+    name: staging
+  needs:
+    - plan-staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "main"
+
+apply-production:
+  <<: *apply_template
+  variables:
+    ENVIRONMENT: production
+  environment:
+    name: production
+  needs:
+    - plan-production
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+      allow_failure: false
+
+# ======================================
+# Drift Detection (Scheduled)
+# ======================================
+drift-detection:
+  stage: validate
+  script:
+    - terraform workspace select production
+    - terraform plan -var-file="environments/production/terraform.tfvars" -detailed-exitcode || DRIFT=$?
+    - |
+      if [ "$DRIFT" == "2" ]; then
+        echo "Infrastructure drift detected!"
+        exit 1
+      fi
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      variables:
+        SCHEDULE_TYPE: "infra-drift"

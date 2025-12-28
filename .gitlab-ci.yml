@@ -12,6 +12,7 @@ stages:
   - register
   - deploy-staging
   - deploy-production
+  - batch
   - rollback
 
 # ----------------------------------------------------------------------
@@ -331,6 +332,79 @@ rollback-staging:
     - if: $CI_COMMIT_BRANCH == "develop"
       when: manual
       allow_failure: true
+
+# ======================================================================
+# STAGE: Batch Inference
+# ======================================================================
+batch-inference-manual:
+  stage: batch
+  <<: *aws_auth
+  script:
+    - pip install -r requirements.txt
+    - |
+      python scripts/run_batch_inference.py \
+        --model-package-group ${MODEL_PACKAGE_GROUP} \
+        --input-path s3://${S3_BUCKET}/batch/input/ \
+        --output-path s3://${S3_BUCKET}/batch/output/ \
+        --wait
+  artifacts:
+    paths:
+      - batch_results.json
+    expire_in: 30 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  timeout: 2h
+
+batch-pipeline-create:
+  stage: batch
+  <<: *aws_auth
+  script:
+    - pip install -r requirements.txt
+    - |
+      python src/pipelines/batch_pipeline.py \
+        --pipeline-name BatchInferencePipeline \
+        --bucket ${S3_BUCKET} \
+        --create
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+
+batch-pipeline-execute:
+  stage: batch
+  <<: *aws_auth
+  script:
+    - pip install -r requirements.txt
+    - |
+      python src/pipelines/batch_pipeline.py \
+        --pipeline-name BatchInferencePipeline \
+        --bucket ${S3_BUCKET} \
+        --execute
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  timeout: 2h
+
+scheduled-batch-inference:
+  stage: batch
+  <<: *aws_auth
+  script:
+    - pip install -r requirements.txt
+    - |
+      python scripts/run_batch_inference.py \
+        --model-package-group ${MODEL_PACKAGE_GROUP} \
+        --input-path s3://${S3_BUCKET}/batch/scheduled/input/ \
+        --output-path s3://${S3_BUCKET}/batch/scheduled/output/ \
+        --wait
+  artifacts:
+    paths:
+      - batch_results.json
+    expire_in: 30 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      variables:
+        SCHEDULE_TYPE: "batch"
+  timeout: 2h
 
 # ======================================================================
 # Scheduled: Retraining

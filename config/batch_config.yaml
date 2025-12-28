@@ -1,0 +1,71 @@
+# Batch Inference Configuration
+# -----------------------------
+
+batch:
+  # Batch transform job settings
+  enabled: true
+  
+  # Input/Output paths
+  paths:
+    input: "batch/input/"
+    output: "batch/output/"
+    scheduled_input: "batch/scheduled/input/"
+    scheduled_output: "batch/scheduled/output/"
+  
+  # Batch job scheduling
+  schedule:
+    enabled: true
+    # Cron expression: Daily at 2 AM UTC
+    expression: "cron(0 2 * * ? *)"
+    # Alternative: rate-based
+    # expression: "rate(1 day)"
+  
+  # Batch transform configuration
+  transform:
+    instance_type: "ml.m5.xlarge"
+    instance_count: 1
+    max_payload_mb: 6
+    strategy: "MultiRecord"  # SingleRecord or MultiRecord
+    max_concurrent_transforms: 4
+    
+  # Data format
+  data:
+    input_format: "csv"  # csv, json, parquet
+    output_format: "json"
+    compression: "none"  # none, gzip
+    
+  # Post-processing
+  postprocessing:
+    enabled: true
+    add_confidence_threshold: true
+    confidence_threshold: 0.8
+    add_business_rules: true
+    
+  # Monitoring
+  monitoring:
+    enabled: true
+    metrics:
+      - "ProcessedRecords"
+      - "FailedRecords"
+      - "SuccessRate"
+      - "ProcessingTime"
+    
+    alarms:
+      - name: "BatchJobFailure"
+        metric: "FailedRecords"
+        threshold: 100
+        comparison: "GreaterThanThreshold"
+      
+      - name: "BatchJobLowSuccessRate"
+        metric: "SuccessRate"
+        threshold: 95
+        comparison: "LessThanThreshold"
+  
+  # Retry configuration
+  retry:
+    max_attempts: 3
+    backoff_multiplier: 2
+    
+tags:
+  project: "mlops-template"
+  component: "batch-inference"

@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLOps Platform - Enterprise Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+        }
+
+        .slide {
+            width: 100%;
+            min-height: 100vh;
+            padding: 50px 70px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-bottom: 4px solid #e94560;
+            page-break-after: always;
+        }
+
+        .slide-number {
+            position: absolute;
+            bottom: 20px;
+            right: 40px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .logo {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            font-size: 14px;
+            color: #e94560;
+            font-weight: bold;
+        }
+
+        h1 {
+            font-size: 48px;
+            color: #fff;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        h1 span {
+            color: #e94560;
+            font-weight: 700;
+        }
+
+        h2 {
+            font-size: 32px;
+            color: #e94560;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e94560;
+            padding-bottom: 12px;
+        }
+
+        h3 {
+            font-size: 20px;
+            color: #4ecca3;
+            margin: 15px 0 12px;
+        }
+
+        .subtitle {
+            font-size: 24px;
+            color: #aaa;
+            margin-bottom: 40px;
+        }
+
+        .title-slide {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .title-slide h1 {
+            font-size: 64px;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            flex: 1;
+        }
+
+        .three-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            flex: 1;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        li {
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        li::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #e94560;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h3 {
+            margin-top: 0;
+        }
+
+        .highlight {
+            color: #4ecca3;
+            font-weight: 600;
+        }
+
+        .metric-box {
+            background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            margin: 8px 0;
+        }
+
+        .metric-box .value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .metric-box .label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        /* Architecture Diagram Styles */
+        .architecture {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .arch-row {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .arch-box {
+            background: rgba(233, 69, 96, 0.2);
+            border: 2px solid #e94560;
+            border-radius: 8px;
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 13px;
+            min-width: 100px;
+        }
+
+        .arch-box.aws {
+            background: rgba(255, 153, 0, 0.2);
+            border-color: #ff9900;
+        }
+
+        .arch-box.gitlab {
+            background: rgba(252, 109, 38, 0.2);
+            border-color: #fc6d26;
+        }
+
+        .arch-box.terraform {
+            background: rgba(98, 75, 192, 0.2);
+            border-color: #7b42bc;
+        }
+
+        .arch-box.security {
+            background: rgba(78, 204, 163, 0.2);
+            border-color: #4ecca3;
+        }
+
+        .arch-box.batch {
+            background: rgba(52, 152, 219, 0.2);
+            border-color: #3498db;
+        }
+
+        .arch-box.realtime {
+            background: rgba(155, 89, 182, 0.2);
+            border-color: #9b59b6;
+        }
+
+        .arch-box.retrain {
+            background: rgba(46, 204, 113, 0.2);
+            border-color: #2ecc71;
+        }
+
+        .arch-arrow {
+            font-size: 20px;
+            color: #888;
+        }
+
+        .arch-arrow-down {
+            font-size: 24px;
+            color: #888;
+        }
+
+        .arch-group {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 8px 0;
+        }
+
+        .arch-group-title {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background: rgba(233, 69, 96, 0.3);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            margin: 25px 0;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: "";
+            position: absolute;
+            top: 25px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(233, 69, 96, 0.3);
+        }
+
+        .timeline-item {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .timeline-dot {
+            width: 50px;
+            height: 50px;
+            background: #e94560;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .timeline-label {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .timeline-title {
+            font-size: 14px;
+            margin-top: 3px;
+        }
+
+        .pipeline-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .pipeline-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pipeline-step {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 12px;
+            text-align: center;
+            flex: 1;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .pipeline-step.active {
+            background: rgba(233, 69, 96, 0.3);
+            border-color: #e94560;
+        }
+
+        @media print {
+            .slide {
+                page-break-after: always;
+                height: 100vh;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SLIDE 1: Title -->
+    <div class="slide title-slide">
+        <h1>Enterprise <span>MLOps</span> Platform</h1>
+        <p class="subtitle">End-to-End Machine Learning Lifecycle on AWS SageMaker</p>
+        <div style="margin-top: 50px; color: #666;">
+            <p>Real-time • Batch • Retraining Pipelines</p>
+            <p style="margin-top: 10px;">GitLab CI/CD • Terraform IaC • Auto-scaling • Blue-Green Deployment</p>
+        </div>
+        <div class="slide-number">1 / 6</div>
+    </div>
+
+    <!-- SLIDE 2: High-Level Architecture -->
+    <div class="slide">
+        <div class="logo">MLOps Platform</div>
+        <h2>High-Level Architecture</h2>
+
+        <div class="architecture">
+            <!-- Source -->
+            <div class="arch-row">
+                <div class="arch-box gitlab" style="font-size: 14px; padding: 15px 30px;">
+                    <strong>GitLab Repository</strong><br>
+                    <span style="font-size: 11px;">Code, Config, IaC</span>
+                </div>
+            </div>
+
+            <div class="arch-arrow-down">↓</div>
+
+            <!-- CI/CD -->
+            <div class="arch-group" style="width: 90%;">
+                <div class="arch-group-title">GitLab CI/CD Pipeline</div>
+                <div class="arch-row">
+                    <div class="arch-box gitlab">Validate</div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-box gitlab">Train</div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-box gitlab">Evaluate</div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-box gitlab">Register</div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-box gitlab">Deploy</div>
+                </div>
+            </div>
+
+            <div class="arch-arrow-down">↓</div>
+
+            <!-- AWS Layer -->
+            <div class="arch-group" style="width: 90%;">
+                <div class="arch-group-title">AWS SageMaker</div>
+                <div class="arch-row">
+                    <div class="arch-box aws">S3 Data</div>
+                    <div class="arch-box aws">Training Job</div>
+                    <div class="arch-box aws">Model Registry</div>
+                    <div class="arch-box aws">Endpoints</div>
+                    <div class="arch-box aws">CloudWatch</div>
+                </div>
+            </div>
+
+            <div class="arch-arrow-down">↓</div>
+
+            <!-- Three Pipelines -->
+            <div class="arch-row" style="width: 90%; justify-content: space-between;">
+                <div class="arch-group" style="flex: 1; margin: 0 10px;">
+                    <div class="arch-group-title" style="color: #9b59b6;">Real-time Pipeline</div>
+                    <div class="arch-box realtime">Endpoint</div>
+                </div>
+                <div class="arch-group" style="flex: 1; margin: 0 10px;">
+                    <div class="arch-group-title" style="color: #3498db;">Batch Pipeline</div>
+                    <div class="arch-box batch">Transform Job</div>
+                </div>
+                <div class="arch-group" style="flex: 1; margin: 0 10px;">
+                    <div class="arch-group-title" style="color: #2ecc71;">Retrain Pipeline</div>
+                    <div class="arch-box retrain">Scheduled/Drift</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-number">2 / 6</div>
+    </div>
+
+    <!-- SLIDE 3: Real-time Pipeline Architecture -->
+    <div class="slide">
+        <div class="logo">MLOps Platform</div>
+        <h2>Real-time Inference Pipeline</h2>
+
+        <div class="two-column">
+            <div>
+                <div class="architecture" style="padding: 10px;">
+                    <div class="arch-box realtime" style="width: 200px;"><strong>API Request</strong><br><span
+                            style="font-size:11px;">JSON/CSV Input</span></div>
+                    <div class="arch-arrow-down">↓</div>
+                    <div class="arch-box realtime" style="width: 200px;"><strong>SageMaker Endpoint</strong><br><span
+                            style="font-size:11px;">Blue-Green Deployment</span></div>
+                    <div class="arch-arrow-down">↓</div>
+                    <div class="arch-row">
+                        <div class="arch-box realtime">Inference Handler</div>
+                        <div class="arch-arrow">→</div>
+                        <div class="arch-box realtime">Model (XGBoost)</div>
+                    </div>
+                    <div class="arch-arrow-down">↓</div>
+                    <div class="arch-row">
+                        <div class="arch-box aws">Data Capture</div>
+                        <div class="arch-box security">Response</div>
+                    </div>
+                    <div class="arch-arrow-down">↓</div>
+                    <div class="arch-box aws" style="width: 200px;"><strong>Auto-scaling</strong><br><span
+                            style="font-size:11px;">Target: 1000 inv/instance</span></div>
+                </div>
+            </div>
+
+            <div>
+                <h3>🚀 Key Features</h3>
+                <div class="card">
+                    <ul>
+                        <li><span class="highlight">Blue-Green Deploy</span> - Zero downtime</li>
+                        <li><span class="highlight">Traffic Shifting</span> - Linear 20%/5min</li>
+                        <li><span class="highlight">Auto-rollback</span> - On CloudWatch alarm</li>
+                        <li><span class="highlight">Health Checks</span> - Continuous validation</li>
+                    </ul>
+                </div>
+
+                <h3 style="margin-top: 20px;">📈 Auto-scaling</h3>
+                <div class="card">
+                    <ul>
+                        <li><span class="highlight">Target Tracking</span> - Invocations/instance</li>
+                        <li><span class="highlight">Step Scaling</span> - CPU > 70%</li>
+                        <li><span class="highlight">Scheduled</span> - Business hours</li>
+                        <li><span class="highlight">Range</span> - 1-10 instances</li>
+                    </ul>
+                </div>
+
+                <h3 style="margin-top: 20px;">⚡ Performance</h3>
+                <div class="arch-row" style="justify-content: flex-start; gap: 15px; margin-top: 10px;">
+                    <div class="metric-box" style="flex: 1;">
+                        <div class="value">&lt;500ms</div>
+                        <div class="label">P95 Latency</div>
+                    </div>
+                    <div class="metric-box" style="flex: 1;">
+                        <div class="value">99.9%</div>
+                        <div class="label">Uptime SLA</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-number">3 / 6</div>
+    </div>
+
+    <!-- SLIDE 4: Batch Pipeline Architecture -->
+    <div class="slide">
+        <div class="logo">MLOps Platform</div>
+        <h2>Batch Inference Pipeline</h2>
+
+        <div class="two-column">
+            <div>
+                <div class="architecture" style="padding: 10px;">
+                    <div class="arch-row">
+                        <div class="arch-box batch"><strong>S3 Input</strong><br><span
+                                style="font-size:11px;">CSV/Parquet</span></div>
+                        <div class="arch-box batch"><strong>Schedule</strong><br><span
+                                style="font-size:11px;">EventBridge</span></div>
+                    </div>
+                    <div class="arch-arrow-down">↓</div>
+                    <div class="arch-box batch" style="width: 220px;"><strong>SageMaker Pipeline</strong></div>
+                    <div class="arch-arrow-down">↓</div>
+                    <div class="arch-group" style="width: 100%;">
+                        <div class="arch-group-title">Pipeline Steps</div>
+                        <div class="arch-row">
+                            <div class="arch-box batch">Preprocess</div>
+                            <div class="arch-arrow">→</div>
+                            <div class="arch-box batch">Transform</div>
+                            <div class="arch-arrow">→</div>
+                            <div class="arch-box batch">Postprocess</div>
+                        </div>
+                    </div>
+                    <div class="arch-arrow-down">↓</div>
+                    <div class="arch-row">
+                        <div class="arch-box aws"><strong>S3 Output</strong></div>
+                        <div class="arch-box security"><strong>CloudWatch</strong><br><span
+                                style="font-size:11px;">Metrics</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3>📦 Batch Features</h3>
+                <div class="card">
+                    <ul>
+                        <li><span class="highlight">MultiRecord Strategy</span> - Faster processing</li>
+                        <li><span class="highlight">Parallel Instances</span> - Scale horizontally</li>
+                        <li><span class="highlight">Auto Retry</span> - 3 attempts with backoff</li>
+                        <li><span class="highlight">Join Source</span> - Input + Output combined</li>
+                    </ul>
+                </div>
+
+                <h3 style="margin-top: 20px;">⏰ Scheduling</h3>
+                <div class="card">
+                    <ul>
+                        <li><span class="highlight">Daily</span> - 2 AM UTC (cron)</li>
+                        <li><span class="highlight">Weekly</span> - Configurable</li>
+                        <li><span class="highlight">On-demand</span> - GitLab manual trigger</li>
+                        <li><span class="highlight">Event-driven</span> - S3 upload trigger</li>
+                    </ul>
+                </div>
+
+                <h3 style="margin-top: 20px;">📊 Monitoring</h3>
+                <table style="font-size: 13px;">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Alert</th>
+                    </tr>
+                    <tr>
+                        <td>Failed Records</td>
+                        <td>> 100</td>
+                    </tr>
+                    <tr>
+                        <td>Success Rate</td>
+                        <td>
+                            < 95%</td>
+                    </tr>
+                    <tr>
+                        <td>Duration</td>
+                        <td>> 2 hours</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="slide-number">4 / 6</div>
+    </div>
+
+    <!-- SLIDE 5: Retraining Pipeline Architecture -->
+    <div class="slide">
+        <div class="logo">MLOps Platform</div>
+        <h2>Automated Retraining Pipeline</h2>
+
+        <div class="two-column">
+            <div>
+                <div class="architecture" style="padding: 10px;">
+                    <!-- Triggers -->
+                    <div class="arch-row">
+                        <div class="arch-box retrain"><strong>Scheduled</strong><br><span
+                                style="font-size:11px;">Weekly</span></div>
+                        <div class="arch-box retrain"><strong>Drift Alert</strong><br><span style="font-size:11px;">KS
+                                Test</span></div>
+                        <div class="arch-box retrain"><strong>Manual</strong><br><span
+                                style="font-size:11px;">GitLab</span></div>
+                    </div>
+                    <div class="arch-arrow-down">↓</div>
+
+                    <!-- EventBridge -->
+                    <div class="arch-box aws" style="width: 220px;"><strong>EventBridge</strong><br><span
+                            style="font-size:11px;">Trigger Rule</span></div>
+                    <div class="arch-arrow-down">↓</div>
+
+                    <!-- Training Pipeline -->
+                    <div class="arch-group" style="width: 100%;">
+                        <div class="arch-group-title">SageMaker Training Pipeline</div>
+                        <div class="arch-row">
+                            <div class="arch-box retrain">Preprocess</div>
+                            <div class="arch-arrow">→</div>
+                            <div class="arch-box retrain">Train</div>
+                            <div class="arch-arrow">→</div>
+                            <div class="arch-box retrain">Evaluate</div>
+                        </div>
+                    </div>
+                    <div class="arch-arrow-down">↓</div>
+
+                    <!-- Decision -->
+                    <div class="arch-box security" style="width: 220px;"><strong>Compare Models</strong><br><span
+                            style="font-size:11px;">New vs Production</span></div>
+                    <div class="arch-arrow-down">↓</div>
+
+                    <!-- Outcome -->
+                    <div class="arch-row">
+                        <div class="arch-box retrain"><strong>Better?</strong><br>→ Register</div>
+                        <div class="arch-box" style="background: rgba(255,100,100,0.2); border-color: #ff6b6b;">
+                            <strong>Worse?</strong><br>→ Keep Current</div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3>🔄 Trigger Types</h3>
+                <div class="card">
+                    <ul>
+                        <li><span class="highlight">Scheduled</span> - Weekly via EventBridge</li>
+                        <li><span class="highlight">Data Drift</span> - KS test p-value < 0.05</li>
+                        <li><span class="highlight">Model Decay</span> - Performance drop alert</li>
+                        <li><span class="highlight">Manual</span> - GitLab pipeline trigger</li>
+                    </ul>
+                </div>
+
+                <h3 style="margin-top: 20px;">📊 Drift Detection</h3>
+                <div class="card">
+                    <ul>
+                        <li><span class="highlight">Statistical Tests</span> - Kolmogorov-Smirnov</li>
+                        <li><span class="highlight">Features Monitored</span> - All numerical</li>
+                        <li><span class="highlight">Threshold</span> - p-value < 0.05</li>
+                        <li><span class="highlight">Action</span> - CloudWatch alarm → Retrain</li>
+                    </ul>
+                </div>
+
+                <h3 style="margin-top: 20px;">✅ Auto-Promotion Criteria</h3>
+                <div class="card">
+                    <ul>
+                        <li>AUC improvement > 1%</li>
+                        <li>All validation tests pass</li>
+                        <li>No data quality issues</li>
+                        <li>Approved by registry rules</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide-number">5 / 6</div>
+    </div>
+
+    <!-- SLIDE 6: Summary & Roadmap -->
+    <div class="slide">
+        <div class="logo">MLOps Platform</div>
+        <h2>Summary & Rollout Roadmap</h2>
+
+        <div class="three-column">
+            <div class="card">
+                <h3 style="color: #9b59b6;">🚀 Real-time</h3>
+                <ul style="font-size: 14px;">
+                    <li>Blue-green deploy</li>
+                    <li>Auto-scaling</li>
+                    <li>
+                        < 500ms latency</li>
+                    <li>99.9% SLA</li>
+                    <li>Auto-rollback</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3 style="color: #3498db;">📦 Batch</h3>
+                <ul style="font-size: 14px;">
+                    <li>Daily scheduling</li>
+                    <li>MultiRecord strategy</li>
+                    <li>Parallel processing</li>
+                    <li>Post-processing</li>
+                    <li>S3 integration</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3 style="color: #2ecc71;">🔄 Retrain</h3>
+                <ul style="font-size: 14px;">
+                    <li>Drift detection</li>
+                    <li>Scheduled triggers</li>
+                    <li>Model comparison</li>
+                    <li>Auto-promotion</li>
+                    <li>Continuous learning</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="timeline" style="margin-top: 30px;">
+            <div class="timeline-item">
+                <div class="timeline-dot">W1-2</div>
+                <div class="timeline-label">Phase 1</div>
+                <div class="timeline-title">Foundation</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">W3-4</div>
+                <div class="timeline-label">Phase 2</div>
+                <div class="timeline-title">Pipelines</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">W5-6</div>
+                <div class="timeline-label">Phase 3</div>
+                <div class="timeline-title">Security</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">W7-8</div>
+                <div class="timeline-label">Phase 4</div>
+                <div class="timeline-title">Governance</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">W9-10</div>
+                <div class="timeline-label">Phase 5</div>
+                <div class="timeline-title">Cost Opt</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot" style="background: #4ecca3;">W11-12</div>
+                <div class="timeline-label">Phase 6</div>
+                <div class="timeline-title">Go-Live</div>
+            </div>
+        </div>
+
+        <div class="arch-row" style="justify-content: space-around; margin-top: 30px;">
+            <div class="metric-box">
+                <div class="value">&lt; 4h</div>
+                <div class="label">Lead Time</div>
+            </div>
+            <div class="metric-box">
+                <div class="value">&lt; 5%</div>
+                <div class="label">Failure Rate</div>
+            </div>
+            <div class="metric-box">
+                <div class="value">&lt; 1h</div>
+                <div class="label">MTTR</div>
+            </div>
+            <div class="metric-box">
+                <div class="value">-30%</div>
+                <div class="label">Cost Reduction</div>
+            </div>
+        </div>
+
+        <div class="slide-number">6 / 6</div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                currentSlide = Math.min(currentSlide + 1, slides.length - 1);
+                slides[currentSlide].scrollIntoView({ behavior: 'smooth' });
+            } else if (e.key === 'ArrowLeft') {
+                currentSlide = Math.max(currentSlide - 1, 0);
+                slides[currentSlide].scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    </script>
+
+</body>
+
+</html>

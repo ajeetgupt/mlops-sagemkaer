@@ -1,0 +1,111 @@
+# Model Card Template
+# -------------------
+# Documentation for model governance and compliance
+
+model_info:
+  name: "${MODEL_NAME}"
+  version: "${MODEL_VERSION}"
+  type: "XGBoost Classifier"
+  created_date: "${DATE}"
+  last_updated: "${DATE}"
+
+model_description:
+  summary: |
+    Binary classification model trained using XGBoost for [USE CASE].
+    The model predicts [TARGET VARIABLE] based on [FEATURES].
+  
+  intended_use: |
+    - Primary use: [DESCRIBE PRIMARY USE CASE]
+    - Intended users: [DATA SCIENTISTS, ANALYSTS, AUTOMATED SYSTEMS]
+    - Out-of-scope uses: [WHAT THE MODEL SHOULD NOT BE USED FOR]
+
+training_data:
+  description: |
+    Training data sourced from [DATA SOURCE].
+    Contains [NUMBER] samples with [NUMBER] features.
+  
+  time_period: "[START DATE] to [END DATE]"
+  
+  preprocessing:
+    - Missing value imputation (median)
+    - Outlier clipping (3 std)
+    - Standard normalization
+  
+  data_splits:
+    train: 80%
+    validation: 10%
+    test: 10%
+
+model_performance:
+  metrics:
+    auc: ${AUC}
+    accuracy: ${ACCURACY}
+    precision: ${PRECISION}
+    recall: ${RECALL}
+    f1_score: ${F1}
+  
+  evaluation_data: "Hold-out test set (10% of data)"
+  
+  performance_across_groups: |
+    [DOCUMENT PERFORMANCE ACROSS DEMOGRAPHIC/BUSINESS SEGMENTS]
+
+ethical_considerations:
+  bias_assessment: |
+    [DESCRIBE ANY BIAS ANALYSIS PERFORMED]
+    [DOCUMENT ANY IDENTIFIED BIASES AND MITIGATIONS]
+  
+  fairness_metrics:
+    - Demographic parity: [VALUE]
+    - Equal opportunity: [VALUE]
+  
+  limitations: |
+    - Model performance may degrade for [EDGE CASES]
+    - Not suitable for [SPECIFIC SCENARIOS]
+  
+  risks: |
+    - [DOCUMENT POTENTIAL RISKS OF MODEL MISUSE]
+
+model_lineage:
+  framework: "XGBoost 1.7"
+  training_infrastructure: "AWS SageMaker"
+  hyperparameters:
+    max_depth: ${MAX_DEPTH}
+    learning_rate: ${LEARNING_RATE}
+    n_estimators: ${N_ESTIMATORS}
+  
+  feature_importance:
+    top_features:
+      - feature_1: 0.XX
+      - feature_2: 0.XX
+      - feature_3: 0.XX
+
+deployment:
+  endpoint: "${ENDPOINT_NAME}"
+  instance_type: "${INSTANCE_TYPE}"
+  autoscaling:
+    min_instances: ${MIN}
+    max_instances: ${MAX}
+  
+  monitoring:
+    - Latency (p95 < 500ms)
+    - Error rate (< 1%)
+    - Data drift detection
+
+governance:
+  owner: "${TEAM_NAME}"
+  reviewers:
+    - "[NAME] - Data Science Lead"
+    - "[NAME] - ML Engineer"
+  
+  approval_status: "${APPROVAL_STATUS}"
+  approved_by: "${APPROVER}"
+  approval_date: "${APPROVAL_DATE}"
+  
+  review_schedule: "Quarterly"
+  next_review_date: "${NEXT_REVIEW}"
+
+change_log:
+  - version: "1.0.0"
+    date: "${DATE}"
+    changes: "Initial model deployment"
+    author: "${AUTHOR}"

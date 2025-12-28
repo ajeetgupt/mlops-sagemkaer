@@ -139,6 +139,41 @@ graph LR
     E -->|Worse| G[Keep Current]
 ```
 
+## 🔄 Batch Inference
+
+The template supports both **real-time** and **batch** inference:
+
+### Manual Batch Job
+```bash
+python scripts/run_batch_inference.py \
+  --input-path s3://bucket/batch/input/ \
+  --output-path s3://bucket/batch/output/ \
+  --wait
+```
+
+### Scheduled Batch Jobs
+Configure in GitLab CI/CD schedules:
+- **Daily predictions**: Set schedule variable `SCHEDULE_TYPE=batch`
+- **Custom schedule**: Edit `config/batch_config.yaml`
+
+### Batch Pipeline (SageMaker)
+```bash
+# Create pipeline
+python src/pipelines/batch_pipeline.py --create
+
+# Execute pipeline
+python src/pipelines/batch_pipeline.py --execute
+```
+
+**Batch Features:**
+- ✅ Automatic preprocessing
+- ✅ Parallel processing (MultiRecord strategy)
+- ✅ Post-processing with business rules
+- ✅ CloudWatch metrics and alarms
+- ✅ Retry logic for failed records
+
+---
+
 ## 🔐 Security Best Practices
 
 - Use IAM roles with least privilege
